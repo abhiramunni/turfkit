@@ -472,3 +472,137 @@ footer .btns{display:flex;gap:8px;flex-wrap:wrap}
     <p class="sub">Six short guides &mdash; the stuff regulars learn the hard way, written down so you don&rsquo;t have to.</p>
     <div class="guides" id="guideGrid"></div>
   </section>
+</main>
+
+<footer>
+  <div class="wrap f-in">
+    <div>
+      <h3>TurfKit</h3>
+      <p>Book the turf. Split the bill. Run the game. Everything is saved on your device only &mdash; no account, no uploads. Rates are indicative, from public listings in October 2026; confirm with the turf before you book.</p>
+      <p style="margin-top:10px">Built for Bengaluru&rsquo;s 5-a-side and 7-a-side players. See you at 6 PM.</p>
+    </div>
+    <div class="btns">
+      <button class="btn ghost small" type="button" id="copyAll">Copy my plan</button>
+      <button class="btn ghost small" type="button" id="removeSamples">Remove samples</button>
+      <button class="btn ghost small" type="button" id="eraseAll">Erase everything</button>
+    </div>
+  </div>
+</footer>
+
+<div id="coach" role="dialog" aria-label="Quick tour">
+  <div class="sheet">
+    <div class="eyebrow">Quick tour &middot; <span id="coachStep">1 of 3</span></div>
+    <h3 id="coachTitle">Find your turf</h3>
+    <p class="helper" id="coachText" style="font-size:15px"></p>
+    <div class="dots" aria-hidden="true"><i class="on"></i><i></i><i></i></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn ghost small" type="button" id="coachSkip">Skip tour</button>
+      <button class="btn small" type="button" id="coachNext">Next</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" role="status" aria-live="polite"></div>
+<noscript><div class="wrap"><div class="noscript"><b>TurfKit needs JavaScript</b> for the planner, formation board and cost splitter. The turf rates below still help: Verve Play (Jayanagar) ₹1,000–1,600/hr, Tackle (Jayanagar) ₹1,200–1,500/hr, Maracana (Basavanagudi) ₹1,400–1,600/hr, Sports Drome (JP Nagar) ₹1,600/hr, Camp Now Arena (HBR Layout) ₹700–950/hr, Playon (Electronic City) ₹800/hr, Tiger 5 Sports (Whitefield) ₹1,200–1,500/hr, Jovin (Whitefield) ₹599–1,000/hr. Rates from October 2026 listings — confirm with the turf.</div></div></noscript>
+
+<script>
+'use strict';
+/* TurfKit — single-file app. All state in localStorage key "turfkit-v1". */
+var TurfKit = window.TurfKit || {};
+var KEY = 'turfkit-v1';
+var $ = function(s){ return document.querySelector(s); };
+var $$ = function(s){ return Array.prototype.slice.call(document.querySelectorAll(s)); };
+function inr(n){ return '₹' + Math.round(n).toLocaleString('en-IN'); }
+function esc(s){ return String(s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+function todayISO(){ var d = new Date(); return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); }
+function fmtDate(iso){ var d = new Date(iso + 'T00:00:00'); var days=['Sun','Mon','Tue','Wed','Thu','Fri','Sat']; var mon=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']; return days[d.getDay()] + ' ' + d.getDate() + ' ' + mon[d.getMonth()]; }
+function fmtTime(h){ var ap = h >= 12 ? 'PM' : 'AM'; var hh = h % 12; if (hh === 0) hh = 12; return hh + ':00 ' + ap; }
+function toast(msg){ var t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(t._h); t._h = setTimeout(function(){ t.classList.remove('show'); }, 2600); }
+
+var TURFS = [
+  {id:'verve', name:'Verve Play', area:'Jayanagar', addr:'40th Cross Rd, 8th Block, Jayanagar', fmt:[5], lo:1000, hi:1600, hours:'6 AM – 10 PM', phone:'+918095110593', note:'5-a-side, box cricket. Closest to BTM Layout.'},
+  {id:'tackle', name:'Tackle Jayanagar', area:'Jayanagar', addr:'Hombegowda Nagar, Jayanagar', fmt:[5,7], lo:1200, hi:1500, hours:'6 AM – 10 PM', phone:'', note:'5-a-side and 7-a-side, box cricket, football coaching.'},
+  {id:'maracana', name:'Maracana Sports Arena', area:'Basavanagudi', addr:'Basavanagudi', fmt:[5], lo:1400, hi:1600, hours:'6 AM – 9:30 PM', phone:'+919606973105', note:'5-a-side, box cricket. 128 reviews, well kept.'},
+  {id:'drome', name:'Sports Drome', area:'JP Nagar', addr:'Puttenahalli, JP Nagar 7th Phase', fmt:[5,7], lo:1600, hi:1600, hours:'6 AM – 11 PM', phone:'+919449001708', note:'7-a-side turf, 5 badminton courts, cricket nets, food cart.'},
+  {id:'campnow', name:'Camp Now Arena', area:'HBR Layout', addr:'Prakruthi Layout, HBR Layout', fmt:[5], lo:700, hi:950, hours:'7 AM – 11 PM', phone:'+919066634443', note:'5-a-side. One of the cheapest evening slots in the city.'},
+  {id:'playon', name:'Playon Sports Arena', area:'Electronic City', addr:'Konappana Agrahara, Electronic City Ph II', fmt:[5], lo:800, hi:800, hours:'5 AM – 11 PM', phone:'+918197335007', note:'Flat ₹800/hr all day, 5-a-side. 797 reviews.'},
+  {id:'tiger5', name:'Tiger 5 Sports', area:'Whitefield', addr:'ITPL Main Road, Krishnarajapuram', fmt:[5,7], lo:1200, hi:1500, hours:'6 AM – 11 PM', phone:'', note:'5, 6, 8 and 9-a-side pitches plus box cricket.'},
+  {id:'jovin', name:'Jovin Sports Club', area:'Whitefield', addr:'Channasandra, Whitefield', fmt:[5,7], lo:599, hi:1000, hours:'6 AM – 10 PM', phone:'+919187541947', note:'Cheapest listed rate in the city — ₹599/hr mornings.'}
+];
+var KIT = [
+  {t:'Turf boots (not studs)', d:'Artificial grass eats metal studs. Turf shoes or moulded boots only.'},
+  {t:'Shin pads', d:'Non-negotiable in a 5-a-side. Small pitch, fast tackles, hard ball.'},
+  {t:'Water bottle — 1 litre each', d:'One bottle per player. Bengaluru evenings are still warm at 6 PM.'},
+  {t:'A match ball', d:'Most turfs have one, but bring your own size-5 so the game starts on time.'},
+  {t:'Bibs (two colours)', d:'Split the teams in seconds. One set of bibs saves ten minutes of arguing.'},
+  {t:'Towel + change of shirt', d:'You will sweat through the first one. The drive home is better dry.'},
+  {t:'Cash / UPI ready', d:'Collect the per-head share before kick-off, not after the final whistle.'},
+  {t:'First-aid basics', d:'A couple of band-aids and a cold spray. Turf burns are real.'}
+];
+var GUIDES = [
+  {t:'Turf etiquette in 60 seconds', b:'Book the slot, arrive 10 minutes early, and leave on time — the next group is waiting at the gate. No spitting, no chewing gum, no metal studs. If the turf asks for a deposit, pay it; no-shows are why turfs started charging in advance.', ul:['Arrive 10 minutes before kick-off','Leave the pitch when your hour ends','No metal studs on artificial grass']},
+  {t:'Turf shoes vs studs — what to wear', b:'Artificial turf is a carpet of plastic grass over rubber crumbs. Metal or long firm-ground studs grip too hard and twist knees. Wear turf shoes (many small rubber nubs) or moulded boots. Trainers work for a casual game but slip on a wet pitch.', ul:['Turf shoes: best grip, kindest on knees','Moulded boots: fine for most turfs','Metal studs: banned almost everywhere']},
+  {t:'A 10-minute warm-up that works', b:'Five-a-side starts at full speed — there is no slow build-up. Jog two laps, do leg swings and hip openers, then 2 minutes of short passing. Cold muscles on a small pitch is how hamstrings go.', ul:['2 min light jog around the pitch','3 min leg swings + hip openers','3 min passing in pairs','2 min light shooting']},
+  {t:'What to carry to every game', b:'The kit list above covers it, but the three things people forget most are water, shin pads and the per-head money. Keep a small bag packed by the door on game day so nothing is a last-minute hunt.', ul:['Water, shin pads, cash/UPI','Ball + bibs if you own them','Towel and a dry shirt for after']},
+  {t:'Splitting the bill without a fight', b:'Agree the split before the game, not after. Total cost divided by players, collected at the start. If someone paid the full booking in advance, the split screen in this app shows exactly who owes them and how much.', ul:['Collect before kick-off','One person books, everyone pays that person','Round to the nearest ₹10 to keep it simple']},
+  {t:'Booking tips that save money', b:'Mornings are the cheapest slots in the city — some turfs are half the evening price before noon. Weekday evenings beat weekend evenings. Book the same slot every week and ask the turf for a regulars rate; most will cut a deal for a fixed weekly booking.', ul:['Mornings can be half the evening price','Weekdays beat weekends','Ask for a regulars rate on a weekly slot']}
+];
+var FORMATIONS = {
+  5: [ {pos:'GK', x:50, y:88}, {pos:'DEF', x:26, y:62}, {pos:'DEF', x:74, y:62}, {pos:'MID', x:50, y:40}, {pos:'ATT', x:50, y:16} ],
+  7: [ {pos:'GK', x:50, y:88}, {pos:'DEF', x:22, y:64}, {pos:'DEF', x:50, y:66}, {pos:'DEF', x:78, y:64}, {pos:'MID', x:32, y:38}, {pos:'MID', x:68, y:38}, {pos:'ATT', x:50, y:14} ]
+};
+function seed(){
+  return {
+    seen: false, samples: true,
+    nextGame: { turfId:'verve', date:'2026-11-22', hour:18, hours:2, players:10 },
+    squad: [
+      {name:'You', pos:'MID', on:true}, {name:'Arjun', pos:'ATT', on:true},
+      {name:'Nikhil', pos:'DEF', on:true}, {name:'Rohan', pos:'DEF', on:true},
+      {name:'Adil', pos:'GK', on:true}, {name:'Kabir', pos:'MID', on:false},
+      {name:'Dev', pos:'ATT', on:false}, {name:'Manoj', pos:'DEF', on:false},
+      {name:'Vivek', pos:'MID', on:false}, {name:'Farhan', pos:'ATT', on:false}
+    ],
+    formation: 5,
+    spots: {0:'Adil', 1:'Nikhil', 2:'Rohan', 3:'You', 4:'Arjun'},
+    paid: {'You':320,'Arjun':320,'Nikhil':320,'Rohan':0,'Adil':320,'Kabir':0,'Dev':0,'Manoj':0,'Vivek':0,'Farhan':0},
+    extra: 0,
+    kit: [true,true,true,false,false,false,false,false],
+    matches: [
+      {date:'2026-11-15', turfId:'verve', us:4, them:2, scorers:'Abhi 2, Arjun 1, Nikhil 1', mvp:'You'},
+      {date:'2026-11-08', turfId:'drome', us:3, them:3, scorers:'Arjun 2, Dev 1', mvp:'Arjun'}
+    ],
+    games: []
+  };
+}
+var state;
+try { state = JSON.parse(localStorage.getItem(KEY)) || seed(); } catch(e){ state = seed(); }
+if (!state || !state.squad) state = seed();
+function save(){ try { localStorage.setItem(KEY, JSON.stringify(state)); } catch(e){} }
+if (!state.seen) { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch(e){} }
+TurfKit.TURFS = TURFS; TurfKit.KIT = KIT; TurfKit.GUIDES = GUIDES; TurfKit.FORMATIONS = FORMATIONS;
+TurfKit.state = function(){ return state; };
+TurfKit.rateFor = rateFor; TurfKit.billFor = billFor; TurfKit.resultFor = resultFor; TurfKit.splitFor = splitFor;
+function turfById(id){ return TURFS.find(function(t){ return t.id === id; }) || TURFS[0]; }
+function rateFor(turf, dateISO, hour){
+  var d = new Date(dateISO + 'T00:00:00');
+  var weekend = (d.getDay() === 0 || d.getDay() === 6);
+  if (hour >= 17) return turf.hi;
+  if (hour < 12) return turf.lo;
+  if (weekend) return turf.hi;
+  return Math.round((turf.lo + turf.hi) / 2);
+}
+function billFor(turf, dateISO, hour, hours, players){
+  var rate = rateFor(turf, dateISO, hour);
+  var total = rate * hours;
+  var per = players > 0 ? Math.ceil(total / players / 10) * 10 : 0;
+  return { rate: rate, total: total, per: per };
+}
+function resultFor(us, them){ return us > them ? 'w' : (us === them ? 'd' : 'l'); }
+function splitFor(total, paidMap, names){
+  var per = names.length ? Math.ceil(total / names.length / 10) * 10 : 0;
+  return names.map(function(n){
+    var paid = paidMap[n] || 0;
+    var bal = paid - per;
+    return { name: n, paid: paid, share: per, bal: bal };
+  });
+}
