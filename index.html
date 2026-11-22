@@ -1035,7 +1035,7 @@ function tick(){
   var g = state.nextGame;
   var target = new Date(g.date + 'T' + String(g.hour).padStart(2,'0') + ':00:00');
   var diff = target.getTime() - Date.now();
-  if (diff < 0) { $('#cdH').textContent = '00'; $('#cdM').textContent = '00'; $('#cdS').textContent = '00'; return; }
+  if (diff < 0) { $('#cdH').textContent = '00'; $('#cdM').textContent = '00'; $('#cdS').textContent = '00'; document.querySelector('.sb-label').textContent = 'Next game · played — log the score'; return; }
   var h = Math.floor(diff / 3600000);
   var m = Math.floor(diff % 3600000 / 60000);
   var s = Math.floor(diff % 60000 / 1000);
