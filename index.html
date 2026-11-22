@@ -301,3 +301,55 @@ footer .btns{display:flex;gap:8px;flex-wrap:wrap}
     <div class="turf-grid" id="turfGrid"></div>
     <p class="helper" style="margin-top:12px">Rates are indicative, from public listings (October 2026). Evening and weekend slots usually cost more than mornings. TurfKit does not take bookings &mdash; call the turf to lock your slot.</p>
   </section>
+  <section class="sec" id="plan" aria-label="Plan a game">
+    <div class="eyebrow">Plan a game</div>
+    <h2>Pick a turf, pick a slot, know the split.</h2>
+    <p class="sub">Choose the turf and the hour, and TurfKit works out the total and what each player owes &mdash; before anyone argues about it at the gate.</p>
+    <div class="plan">
+      <div class="card pad">
+        <div class="field">
+          <label for="planTurf">Turf</label>
+          <select id="planTurf"></select>
+        </div>
+        <div class="field">
+          <label for="planDate">Date</label>
+          <input type="date" id="planDate" value="2026-11-22">
+        </div>
+        <div class="field">
+          <label>Start time</label>
+          <div class="slots" id="slotGrid" role="group" aria-label="Start time"></div>
+        </div>
+        <div class="field">
+          <label>How long?</label>
+          <div class="hours" role="group" aria-label="Duration">
+            <button class="chip" type="button" data-hours="1" aria-pressed="false">1 hour</button>
+            <button class="chip" type="button" data-hours="2" aria-pressed="true">2 hours</button>
+            <button class="chip" type="button" data-hours="3" aria-pressed="false">3 hours</button>
+          </div>
+        </div>
+        <div class="field">
+          <label for="planPlayers">Players (including you)</label>
+          <div class="stepper">
+            <button type="button" id="pMinus" aria-label="Fewer players">&minus;</button>
+            <b id="planPlayers">10</b>
+            <button type="button" id="pPlus" aria-label="More players">+</button>
+          </div>
+          <p class="helper" style="margin:8px 0 0">5-a-side needs 10 players, 7-a-side needs 14. Add a couple of subs &mdash; someone always drops out.</p>
+        </div>
+        <button class="btn" type="button" id="saveGame">Save this game</button>
+        <p class="helper" style="margin:10px 0 0" id="saveNote">Saved games appear in your match log and update the scoreboard.</p>
+      </div>
+      <div class="card bill" aria-live="polite">
+        <div class="eyebrow">Your bill</div>
+        <h3 class="serif" style="font-size:24px;margin:6px 0 10px" id="billTurf">Verve Play</h3>
+        <div class="row"><span>Rate</span><b id="billRate">₹1,600 / hour</b></div>
+        <div class="row"><span>Slot</span><b id="billSlot">Sun 22 Nov &middot; 6:00 PM</b></div>
+        <div class="row"><span>Duration</span><b id="billHours">2 hours</b></div>
+        <div class="row"><span>Players</span><b id="billPlayers">10</b></div>
+        <div class="row total"><span>Total</span><b id="billTotal">₹3,200</b></div>
+        <div class="perhead"><b id="billPerHead">₹320</b><span>per player &middot; collect before the game, not after</span></div>
+        <p class="helper" id="billNote">Sunday evening rate. Mornings are usually cheaper &mdash; try 7 AM if the budget is tight.</p>
+        <button class="btn ghost small" type="button" id="copyPlan">Copy plan summary</button>
+      </div>
+    </div>
+  </section>
