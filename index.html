@@ -225,3 +225,52 @@ footer .btns{display:flex;gap:8px;flex-wrap:wrap}
 </style>
 </head>
 <body>
+<div id="intro" role="dialog" aria-label="Welcome to TurfKit">
+  <button id="skipIntro" type="button">Skip intro</button>
+  <div class="ball" aria-hidden="true"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="#fff"/><polygon points="50,30 68,42 62,63 38,63 32,42" fill="#241a12"/><polygon points="50,4 62,20 50,30 38,20" fill="#241a12"/><polygon points="94,44 78,52 68,42 76,26" fill="#241a12"/><polygon points="6,44 24,26 32,42 22,52" fill="#241a12"/><polygon points="26,92 38,63 62,63 74,92 50,98" fill="#241a12"/></svg></div>
+  <h1><span class="st">TURFKIT</span><span class="st">Book the turf.</span><span class="st">Split the bill. Run the game.</span></h1>
+  <p>Bengaluru&rsquo;s 5-a-side and 7-a-side turfs, your squad, your split &mdash; all in one place. No signup, nothing leaves your phone.</p>
+  <div class="prog" aria-hidden="true"><i id="introBar"></i></div>
+  <div class="helper" style="color:#cbb894" id="introPct">Getting the floodlights on&hellip;</div>
+</div>
+
+<header class="top">
+  <div class="wrap top-in">
+    <a class="logo" href="#top"><span class="mark" aria-hidden="true"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="#fff"/><polygon points="50,30 68,42 62,63 38,63 32,42" fill="#241a12"/><polygon points="50,4 62,20 50,30 38,20" fill="#241a12"/><polygon points="94,44 78,52 68,42 76,26" fill="#241a12"/><polygon points="6,44 24,26 32,42 22,52" fill="#241a12"/><polygon points="26,92 38,63 62,63 74,92 50,98" fill="#241a12"/></svg></span>TurfKit</a>
+    <nav aria-label="Sections">
+      <a href="#turfs">Find a turf</a><a href="#plan">Plan a game</a><a href="#formation">Formation</a><a href="#split">Split</a><a href="#log">Match log</a><a href="#guides">Guides</a>
+    </nav>
+  </div>
+</header>
+
+<main id="top" class="wrap">
+  <div class="scoreboard" role="region" aria-label="Next game">
+    <div class="sb-in">
+      <div>
+        <div class="sb-label">Next game &middot; tonight</div>
+        <div class="sb-game" id="sbGame">Sunday 22 Nov &middot; 6:00 PM &middot; Jayanagar</div>
+        <div class="sb-meta" id="sbMeta">Verve Play &middot; 2 hours &middot; 10 players &middot; ₹3,200 total &middot; ₹320 a head</div>
+      </div>
+      <div class="sb-cd" aria-label="Countdown to kick-off">
+        <div class="t"><b id="cdH">--</b><span>hours</span></div><div class="t"><b>:</b><span>&nbsp;</span></div>
+        <div class="t"><b id="cdM">--</b><span>mins</span></div><div class="t"><b>:</b><span>&nbsp;</span></div>
+        <div class="t"><b id="cdS">--</b><span>secs</span></div>
+      </div>
+    </div>
+  </div>
+
+  <section class="hero" aria-label="TurfKit introduction">
+    <img class="bg" src="{{HERO_IMG}}" alt="A floodlit 5-a-side turf in Bengaluru at dusk, a football on the centre spot" fetchpriority="high" onerror="this.style.display='none'">
+    <div class="shade" aria-hidden="true"></div>
+    <div class="copy">
+      <div class="eyebrow" style="color:var(--gold)">Bengaluru &middot; 5-a-side &amp; 7-a-side</div>
+      <h1>Book the turf.<br><em>Split the bill.</em><br>Run the game.</h1>
+      <p>Real hourly rates from turfs around Jayanagar, JP Nagar, BTM, HSR and Whitefield &mdash; plan the slot, set the formation, and know exactly what each player owes before kick-off.</p>
+      <div class="stats">
+        <span class="stat"><b>8</b> turfs listed</span>
+        <span class="stat">from <b>₹599</b>/hr</span>
+        <span class="stat"><b>5v5</b> &amp; <b>7v7</b></span>
+        <span class="stat">rates from <b>Oct 2026</b> listings</span>
+      </div>
+    </div>
+  </section>
