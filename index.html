@@ -816,3 +816,112 @@ $$('#formation [data-fm]').forEach(function(b){
   });
 });
 $('#clearSpots').addEventListener('click', function(){ state.spots = {}; selSpot = 0; save(); renderSpots(); renderSquad(); toast('Formation cleared'); });
+/* ---- cost splitter ---- */
+function currentTotal(){
+  var t = turfById(state.nextGame.turfId);
+  var b = billFor(t, state.nextGame.date, state.nextGame.hour, state.nextGame.hours, state.nextGame.players);
+  return b.total + (state.extra || 0);
+}
+function renderSplit(){
+  var names = state.squad.map(function(p){ return p.name; });
+  var total = currentTotal();
+  var per = names.length ? Math.ceil(total / names.length / 10) * 10 : 0;
+  $('#splitSummary').textContent = 'Total ' + inr(total) + ' · ' + names.length + ' players · ' + inr(per) + ' each';
+  $('#payList').innerHTML = names.map(function(n){
+    return '<div class="payrow"><div class="who"><b>' + esc(n) + '</b><span>Paid so far</span></div>' +
+      '<input type="number" min="0" step="10" value="' + (state.paid[n] || 0) + '" data-paid="' + esc(n) + '" aria-label="Amount paid by ' + esc(n) + '"></div>';
+  }).join('');
+  var rows = splitFor(total, state.paid, names);
+  $('#splitList').innerHTML = rows.map(function(r){
+    var badge, txt;
+    if (r.bal === 0) { badge = '<span class="badge even">Settled</span>'; txt = 'paid ' + inr(r.paid) + ' — even'; }
+    else if (r.bal > 0) { badge = '<span class="badge paid">Overpaid ' + inr(r.bal) + '</span>'; txt = 'paid ' + inr(r.paid) + ' — gets ' + inr(r.bal) + ' back'; }
+    else { badge = '<span class="badge owes">Owes ' + inr(-r.bal) + '</span>'; txt = 'paid ' + inr(r.paid) + ' — still owes ' + inr(-r.bal); }
+    return '<div class="payrow"><div class="who"><b>' + esc(r.name) + '</b><span>' + txt + '</span></div>' + badge + '</div>';
+  }).join('');
+  $$('#payList [data-paid]').forEach(function(inp){
+    inp.addEventListener('change', function(){
+      var n = inp.getAttribute('data-paid');
+      var v = parseInt(inp.value, 10);
+      state.paid[n] = (isNaN(v) || v < 0) ? 0 : v;
+      save(); renderSplit();
+    });
+  });
+}
+$('#extraCost').addEventListener('change', function(){
+  var v = parseInt($('#extraCost').value, 10);
+  state.extra = (isNaN(v) || v < 0) ? 0 : v;
+  $('#extraCost').value = String(state.extra);
+  save(); renderSplit();
+});
+$('#copySplit').addEventListener('click', function(){
+  var names = state.squad.map(function(p){ return p.name; });
+  var total = currentTotal();
+  var rows = splitFor(total, state.paid, names);
+  var lines = rows.map(function(r){
+    return r.name + ': paid ' + inr(r.paid) + ' — ' + (r.bal === 0 ? 'settled' : (r.bal > 0 ? 'gets back ' + inr(r.bal) : 'owes ' + inr(-r.bal)));
+  });
+  var t = turfById(state.nextGame.turfId);
+  var txt = 'TurfKit split — ' + t.name + ', ' + fmtDate(state.nextGame.date) + ' ' + fmtTime(state.nextGame.hour) + '. Total ' + inr(total) + ' (' + inr(total - (state.extra || 0)) + ' turf + ' + inr(state.extra || 0) + ' extras), ' + inr(Math.ceil(total / names.length / 10) * 10) + ' each:\n' + lines.join('\n');
+  copyText(txt, 'Split copied — paste it in your group chat');
+});
+
+/* ---- match log ---- */
+function renderTally(){
+  var w = 0, d = 0, l = 0;
+  state.matches.forEach(function(m){ var r = resultFor(m.us, m.them); if (r === 'w') w++; else if (r === 'd') d++; else l++; });
+  $('#tally').innerHTML =
+    '<div class="t"><b>' + state.matches.length + '</b><span>games</span></div>' +
+    '<div class="t"><b>' + w + '</b><span>won</span></div>' +
+    '<div class="t"><b>' + d + '</b><span>drawn</span></div>' +
+    '<div class="t"><b>' + l + '</b><span>lost</span></div>';
+}
+function renderMatches(){
+  if (!state.matches.length) { $('#matchList').innerHTML = '<p class="helper">No matches logged yet. Play tonight, then log the score here.</p>'; return; }
+  var sorted = state.matches.slice().sort(function(a,b){ return b.date.localeCompare(a.date); });
+  $('#matchList').innerHTML = sorted.map(function(m, idx){
+    var t = turfById(m.turfId);
+    var r = resultFor(m.us, m.them);
+    var label = r === 'w' ? 'Won' : (r === 'd' ? 'Drew' : 'Lost');
+    return '<article class="card match"><span class="res ' + r + '">' + label + '</span>' +
+      '<span class="score">' + m.us + ' – ' + m.them + '</span>' +
+      '<div class="det"><b>' + esc(t.name) + ' · ' + fmtDate(m.date) + '</b>' +
+      '<span>' + (m.scorers ? 'Scorers: ' + esc(m.scorers) + ' · ' : '') + 'Player of the match: ' + esc(m.mvp || '—') + '</span></div>' +
+      '<button class="btn ghost small" type="button" data-del-match="' + m.date + '|' + m.turfId + '|' + m.us + '|' + m.them + '">Delete</button></article>';
+  }).join('');
+}
+$('#matchList').addEventListener('click', function(e){
+  var b = e.target.closest('[data-del-match]');
+  if (!b) return;
+  var parts = b.getAttribute('data-del-match').split('|');
+  state.matches = state.matches.filter(function(m){ return !(m.date === parts[0] && m.turfId === parts[1] && String(m.us) === parts[2] && String(m.them) === parts[3]); });
+  save(); renderTally(); renderMatches();
+  toast('Match deleted');
+});
+$('#toggleLogForm').addEventListener('click', function(){
+  var f = $('#logForm');
+  f.hidden = !f.hidden;
+  $('#toggleLogForm').textContent = f.hidden ? 'Log a match' : 'Hide form';
+  if (!f.hidden) { $('#logDate').focus(); }
+});
+$('#saveMatch').addEventListener('click', function(){
+  var us = parseInt($('#logUs').value, 10) || 0;
+  var them = parseInt($('#logThem').value, 10) || 0;
+  var m = {
+    date: $('#logDate').value || todayISO(),
+    turfId: $('#logTurf').value,
+    us: us, them: them,
+    scorers: $('#logScorers').value.trim(),
+    mvp: $('#logMvp').value
+  };
+  state.matches.push(m);
+  save(); renderTally(); renderMatches();
+  $('#logForm').hidden = true;
+  $('#toggleLogForm').textContent = 'Log a match';
+  toast('Match saved: ' + us + '–' + them + ' at ' + turfById(m.turfId).name);
+});
+function renderLogForm(){
+  $('#logTurf').innerHTML = TURFS.map(function(t){ return '<option value="' + t.id + '">' + esc(t.name) + ' — ' + esc(t.area) + '</option>'; }).join('');
+  $('#logTurf').value = state.nextGame.turfId;
+  $('#logMvp').innerHTML = state.squad.map(function(p){ return '<option value="' + esc(p.name) + '">' + esc(p.name) + '</option>'; }).join('');
+}
