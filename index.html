@@ -606,3 +606,135 @@ function splitFor(total, paidMap, names){
     return { name: n, paid: paid, share: per, bal: bal };
   });
 }
+/* ---- turf finder ---- */
+var fArea = 'All', fFmt = 'All';
+function fmtLabel(t){ return t.fmt.map(function(f){ return f + '-a-side'; }).join(' & '); }
+function renderTurfs(){
+  var list = TURFS.filter(function(t){
+    var areaOk = (fArea === 'All') || (t.area === fArea) || (fArea === 'BTM & HSR' && (t.area === 'BTM & HSR'));
+    var fmtOk = (fFmt === 'All') || t.fmt.indexOf(parseInt(fFmt, 10)) !== -1;
+    return areaOk && fmtOk;
+  });
+  var sort = ($('#sortSel') || {}).value || 'price';
+  list.sort(function(a,b){
+    if (sort === 'price') return a.lo - b.lo;
+    if (sort === 'rateDesc') return b.hi - a.hi;
+    return a.area.localeCompare(b.area) || a.name.localeCompare(b.name);
+  });
+  $('#turfCount').textContent = 'Showing ' + list.length + ' of ' + TURFS.length + ' turfs' + (fArea !== 'All' ? ' in ' + fArea : '') + (fFmt !== 'All' ? ' · ' + fFmt + '-a-side' : '') + '.';
+  $('#turfGrid').innerHTML = list.map(function(t){
+    var rateTxt = t.lo === t.hi ? inr(t.lo) : inr(t.lo) + '–' + inr(t.hi);
+    var hot = t.lo <= 800 ? '<span class="pill hot">Budget pick</span>' : '';
+    var phone = t.phone ? '<a href="tel:' + t.phone + '">Call ' + t.phone.replace('+91','+91 ') + '</a>' : '<span class="muted">Call to book — no number listed</span>';
+    return '<article class="card turf">' +
+      '<div class="t-top"><div><h3>' + esc(t.name) + '</h3><div class="area">' + esc(t.area) + ' · ' + esc(t.addr) + '</div></div>' +
+      '<div class="rate">' + rateTxt + '<small> /hr</small></div></div>' +
+      '<p class="helper" style="margin:0">' + esc(t.note) + '</p>' +
+      '<div class="meta"><span class="pill">' + fmtLabel(t) + '</span><span class="pill">' + esc(t.hours) + '</span>' + hot + '</div>' +
+      '<div class="acts">' + phone + '<span style="flex:1"></span><button class="btn ghost small" type="button" data-plan="' + t.id + '">Plan a game here</button></div>' +
+      '</article>';
+  }).join('');
+}
+$$('#turfs [data-area]').forEach(function(b){
+  b.addEventListener('click', function(){
+    fArea = b.getAttribute('data-area');
+    $$('#turfs [data-area]').forEach(function(x){ x.setAttribute('aria-pressed', String(x === b)); });
+    renderTurfs();
+  });
+});
+$$('#turfs [data-fmt]').forEach(function(b){
+  b.addEventListener('click', function(){
+    fFmt = b.getAttribute('data-fmt');
+    $$('#turfs [data-fmt]').forEach(function(x){ x.setAttribute('aria-pressed', String(x === b)); });
+    renderTurfs();
+  });
+});
+$('#sortSel').addEventListener('change', renderTurfs);
+$('#turfGrid').addEventListener('click', function(e){
+  var b = e.target.closest('[data-plan]');
+  if (!b) return;
+  var t = turfById(b.getAttribute('data-plan'));
+  $('#planTurf').value = t.id;
+  updateBill();
+  document.getElementById('plan').scrollIntoView({behavior:'smooth'});
+  toast(t.name + ' loaded into the planner');
+});
+
+/* ---- planner ---- */
+var SLOTS = [6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22];
+function renderSlots(){
+  $('#slotGrid').innerHTML = SLOTS.map(function(h){
+    return '<button type="button" class="slot" data-h="' + h + '" aria-pressed="' + String(h === state.nextGame.hour) + '">' + fmtTime(h) + '</button>';
+  }).join('');
+  $$('#slotGrid .slot').forEach(function(b){
+    b.addEventListener('click', function(){
+      state.nextGame.hour = parseInt(b.getAttribute('data-h'), 10);
+      $$('#slotGrid .slot').forEach(function(x){ x.setAttribute('aria-pressed', String(x === b)); });
+      save(); updateBill();
+    });
+  });
+}
+function renderPlanTurf(){
+  $('#planTurf').innerHTML = TURFS.map(function(t){ return '<option value="' + t.id + '">' + esc(t.name) + ' — ' + esc(t.area) + ' (' + fmtLabel(t) + ')</option>'; }).join('');
+  $('#planTurf').value = state.nextGame.turfId;
+}
+function updateBill(){
+  var t = turfById($('#planTurf').value);
+  var date = $('#planDate').value || todayISO();
+  var hours = state.nextGame.hours;
+  var players = state.nextGame.players;
+  var b = billFor(t, date, state.nextGame.hour, hours, players);
+  $('#billTurf').textContent = t.name + ' · ' + t.area;
+  $('#billRate').textContent = inr(b.rate) + ' / hour';
+  $('#billSlot').textContent = fmtDate(date) + ' · ' + fmtTime(state.nextGame.hour);
+  $('#billHours').textContent = hours + (hours === 1 ? ' hour' : ' hours');
+  $('#billPlayers').textContent = String(players);
+  $('#billTotal').textContent = inr(b.total);
+  $('#billPerHead').textContent = inr(b.per);
+  var morning = state.nextGame.hour < 12;
+  $('#billNote').textContent = morning
+    ? 'Morning rate — the cheapest slot of the day at this turf.'
+    : (state.nextGame.hour >= 17 ? 'Evening rate — prime time, so it costs the most. Mornings are usually cheaper.' : 'Afternoon rate — between the cheap mornings and pricey evenings.');
+  $('#planPlayers').textContent = String(players);
+  var g = state.nextGame;
+  $('#sbGame').textContent = fmtDate(g.date) + ' · ' + fmtTime(g.hour) + ' · ' + t.area;
+  $('#sbMeta').textContent = t.name + ' · ' + g.hours + (g.hours === 1 ? ' hour' : ' hours') + ' · ' + g.players + ' players · ' + inr(billFor(t, g.date, g.hour, g.hours, g.players).total) + ' total · ' + inr(billFor(t, g.date, g.hour, g.hours, g.players).per) + ' a head';
+  save();
+}
+$('#planTurf').addEventListener('change', function(){ state.nextGame.turfId = $('#planTurf').value; updateBill(); });
+$('#planDate').addEventListener('change', function(){ state.nextGame.date = $('#planDate').value || todayISO(); updateBill(); });
+$$('#plan [data-hours]').forEach(function(b){
+  b.addEventListener('click', function(){
+    state.nextGame.hours = parseInt(b.getAttribute('data-hours'), 10);
+    $$('#plan [data-hours]').forEach(function(x){ x.setAttribute('aria-pressed', String(x === b)); });
+    updateBill();
+  });
+});
+$('#pMinus').addEventListener('click', function(){ if (state.nextGame.players > 2) { state.nextGame.players--; updateBill(); renderSplit(); } });
+$('#pPlus').addEventListener('click', function(){ if (state.nextGame.players < 22) { state.nextGame.players++; updateBill(); renderSplit(); } });
+$('#saveGame').addEventListener('click', function(){
+  var t = turfById($('#planTurf').value);
+  var g = { turfId: t.id, date: $('#planDate').value || todayISO(), hour: state.nextGame.hour, hours: state.nextGame.hours, players: state.nextGame.players };
+  state.nextGame = g;
+  state.games.push(g);
+  save(); updateBill();
+  $('#saveNote').textContent = 'Saved: ' + t.name + ', ' + fmtDate(g.date) + ' ' + fmtTime(g.hour) + ' (' + g.hours + 'h, ' + g.players + ' players). It is now your next game.';
+  toast('Game saved — scoreboard updated');
+});
+$('#copyPlan').addEventListener('click', function(){
+  var t = turfById($('#planTurf').value);
+  var g = state.nextGame;
+  var b = billFor(t, g.date, g.hour, g.hours, g.players);
+  var txt = 'TurfKit plan: ' + t.name + ' (' + t.area + '), ' + fmtDate(g.date) + ' ' + fmtTime(g.hour) + ', ' + g.hours + 'h. Total ' + inr(b.total) + ' — ' + inr(b.per) + ' per head for ' + g.players + ' players. Call ' + (t.phone || 'the turf') + ' to book.';
+  copyText(txt, 'Plan copied — paste it in your group chat');
+});
+function copyText(txt, msg){
+  function done(){ toast(msg); }
+  if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(txt).then(done, function(){ fallbackCopy(txt); done(); }); }
+  else { fallbackCopy(txt); done(); }
+}
+function fallbackCopy(txt){
+  var ta = document.createElement('textarea'); ta.value = txt; document.body.appendChild(ta); ta.select();
+  try { document.execCommand('copy'); } catch(e){}
+  document.body.removeChild(ta);
+}
