@@ -738,3 +738,81 @@ function fallbackCopy(txt){
   try { document.execCommand('copy'); } catch(e){}
   document.body.removeChild(ta);
 }
+/* ---- formation & squad ---- */
+var selSpot = 0;
+function renderSpots(){
+  var fm = FORMATIONS[state.formation];
+  $('#spots').innerHTML = fm.map(function(s, i){
+    var name = state.spots[i] || '';
+    return '<div class="spot' + (i === selSpot ? ' sel' : '') + '" data-i="' + i + '" style="left:' + s.x + '%;top:' + s.y + '%" role="button" tabindex="0" aria-label="' + s.pos + ' spot' + (name ? ', ' + name : ', empty') + '">' +
+      '<div class="dot">' + (name ? esc(name.slice(0,2).toUpperCase()) : '?') + '</div>' +
+      '<div class="pos">' + s.pos + '</div><div class="nm">' + esc(name || 'Tap to fill') + '</div></div>';
+  }).join('');
+  $$('#spots .spot').forEach(function(el){
+    el.addEventListener('click', function(){ selSpot = parseInt(el.getAttribute('data-i'), 10); renderSpots(); updateSquadHint(); });
+    el.addEventListener('keydown', function(e){ if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); selSpot = parseInt(el.getAttribute('data-i'), 10); renderSpots(); updateSquadHint(); } });
+  });
+}
+function updateSquadHint(){
+  var fm = FORMATIONS[state.formation];
+  var s = fm[selSpot];
+  $('#squadHint').textContent = 'Placing: ' + s.pos + ' spot. Tap a player below to put them there — or tap another spot first.';
+}
+function renderSquad(){
+  var onPitch = Object.keys(state.spots).map(function(k){ return state.spots[k]; });
+  $('#squadList').innerHTML = state.squad.map(function(p){
+    var placed = onPitch.indexOf(p.name) !== -1;
+    return '<div class="row"><div class="av">' + esc(p.name.slice(0,2).toUpperCase()) + '</div>' +
+      '<div class="who"><b>' + esc(p.name) + '</b><span>' + esc(p.pos) + (placed ? ' · on the pitch' : ' · on the bench') + '</span></div>' +
+      '<button class="btn ghost small" type="button" data-place="' + esc(p.name) + '">Place</button>' +
+      '<button class="btn ghost small" type="button" data-del="' + esc(p.name) + '" aria-label="Remove ' + esc(p.name) + '">Remove</button></div>';
+  }).join('');
+  var bench = state.squad.filter(function(p){ return onPitch.indexOf(p.name) === -1; }).map(function(p){ return p.name; });
+  $('#benchList').innerHTML = bench.length
+    ? '<p class="helper" style="margin:0"><b>Bench:</b> ' + bench.map(esc).join(', ') + '</p>'
+    : '<p class="helper" style="margin:0">Everyone is on the pitch.</p>';
+}
+$('#squadList').addEventListener('click', function(e){
+  var pb = e.target.closest('[data-place]');
+  var db = e.target.closest('[data-del]');
+  if (pb) {
+    var name = pb.getAttribute('data-place');
+    var fm = FORMATIONS[state.formation];
+    var p = state.squad.find(function(x){ return x.name === name; });
+    if (p) { state.spots[selSpot] = name; p.pos = fm[selSpot].pos; save(); renderSpots(); renderSquad(); toast(name + ' is now ' + fm[selSpot].pos); }
+    return;
+  }
+  if (db) {
+    var nm = db.getAttribute('data-del');
+    state.squad = state.squad.filter(function(x){ return x.name !== nm; });
+    Object.keys(state.spots).forEach(function(k){ if (state.spots[k] === nm) delete state.spots[k]; });
+    delete state.paid[nm];
+    save(); renderSpots(); renderSquad(); renderSplit();
+    toast(nm + ' removed from the squad');
+  }
+});
+$('#addPlayer').addEventListener('click', addPlayer);
+$('#newPlayer').addEventListener('keydown', function(e){ if (e.key === 'Enter') addPlayer(); });
+function addPlayer(){
+  var v = $('#newPlayer').value.trim();
+  if (!v) { toast('Type a name first'); return; }
+  if (state.squad.some(function(x){ return x.name.toLowerCase() === v.toLowerCase(); })) { toast(v + ' is already in the squad'); return; }
+  state.squad.push({name: v, pos: 'MID', on: false});
+  state.paid[v] = 0;
+  $('#newPlayer').value = '';
+  save(); renderSquad(); renderSplit();
+  toast(v + ' added to the squad');
+}
+$$('#formation [data-fm]').forEach(function(b){
+  b.addEventListener('click', function(){
+    state.formation = parseInt(b.getAttribute('data-fm'), 10);
+    $$('#formation [data-fm]').forEach(function(x){ x.setAttribute('aria-pressed', String(x === b)); });
+    var keep = {};
+    var fm = FORMATIONS[state.formation];
+    fm.forEach(function(s, i){ if (state.spots[i]) keep[i] = state.spots[i]; });
+    state.spots = keep;
+    selSpot = 0;
+    save(); renderSpots(); updateSquadHint();
+  });
+});
+$('#clearSpots').addEventListener('click', function(){ state.spots = {}; selSpot = 0; save(); renderSpots(); renderSquad(); toast('Formation cleared'); });
