@@ -398,3 +398,48 @@ footer .btns{display:flex;gap:8px;flex-wrap:wrap}
       </div>
     </div>
   </section>
+  <section class="sec" id="split" aria-label="Split the cost">
+    <div class="eyebrow">Split the cost</div>
+    <h2>Who paid, who owes, who&rsquo;s settled.</h2>
+    <p class="sub">Enter what each person actually paid. TurfKit works out the share and the balance &mdash; no mental maths in the car park.</p>
+    <div class="split">
+      <div class="card pad">
+        <h3 class="serif" style="font-size:22px;margin-bottom:4px">What everyone paid</h3>
+        <p class="helper">Type the amount each person handed over. Leave it at 0 if they haven&rsquo;t paid yet.</p>
+        <div id="payList"></div>
+        <div class="field" style="margin-top:14px">
+          <label for="extraCost">Extras (bibs, ball hire, water) — ₹</label>
+          <input type="number" id="extraCost" min="0" step="10" value="0">
+        </div>
+        <p class="helper">The total bill is the turf cost plus extras, split equally across the squad.</p>
+      </div>
+      <div class="card pad" aria-live="polite">
+        <h3 class="serif" style="font-size:22px;margin-bottom:4px">The split</h3>
+        <p class="helper" id="splitSummary">Total ₹3,200 &middot; 10 players &middot; ₹320 each</p>
+        <div id="splitList"></div>
+        <button class="btn ghost small" type="button" id="copySplit" style="margin-top:12px">Copy split summary</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" id="log" aria-label="Match log">
+    <div class="eyebrow">Match log</div>
+    <h2>Every game, on the record.</h2>
+    <p class="sub">Log the score after the whistle. Your win-draw-loss record and the MVP count build up over the season.</p>
+    <div class="log-head">
+      <div class="tally" id="tally"></div>
+      <button class="btn ghost small" type="button" id="toggleLogForm">Log a match</button>
+    </div>
+    <div class="card pad" id="logForm" hidden>
+      <div class="logform">
+        <div class="field"><label for="logDate">Date</label><input type="date" id="logDate" value="2026-11-22"></div>
+        <div class="field"><label for="logTurf">Turf</label><select id="logTurf"></select></div>
+        <div class="field"><label for="logUs">Your team&rsquo;s goals</label><input type="number" id="logUs" min="0" max="30" value="0"></div>
+        <div class="field"><label for="logThem">Their goals</label><input type="number" id="logThem" min="0" max="30" value="0"></div>
+        <div class="field full"><label for="logScorers">Scorers (optional) — e.g. Abhi 2, Arjun 1</label><input type="text" id="logScorers" placeholder="Abhi 2, Arjun 1" maxlength="80"></div>
+        <div class="field full"><label for="logMvp">Player of the match</label><select id="logMvp"></select></div>
+      </div>
+      <button class="btn" type="button" id="saveMatch">Save match</button>
+    </div>
+    <div id="matchList" style="display:grid;gap:10px;margin-top:14px"></div>
+  </section>
