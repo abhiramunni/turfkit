@@ -443,3 +443,32 @@ footer .btns{display:flex;gap:8px;flex-wrap:wrap}
     </div>
     <div id="matchList" style="display:grid;gap:10px;margin-top:14px"></div>
   </section>
+  <section class="sec" id="kit" aria-label="Match-day kit checklist">
+    <div class="eyebrow">Match-day kit</div>
+    <h2>Packed? Then you can play.</h2>
+    <p class="sub">Eight things to tick off before you leave the house. The ring fills as you pack.</p>
+    <div class="check-wrap">
+      <div class="card ring-card">
+        <svg viewBox="0 0 150 150" role="img" aria-label="Kit checklist progress">
+          <circle cx="75" cy="75" r="62" fill="none" stroke="#efe3c8" stroke-width="12"/>
+          <circle id="kitRing" cx="75" cy="75" r="62" fill="none" stroke="#c05b2e" stroke-width="12" stroke-linecap="round" stroke-dasharray="389.6" stroke-dashoffset="243.5" transform="rotate(-90 75 75)"/>
+        </svg>
+        <div class="pct" id="kitPct">38%</div>
+        <p class="helper" id="kitLine">3 of 8 packed</p>
+        <button class="btn ghost small" type="button" id="resetKit">Reset checklist</button>
+      </div>
+      <div class="card check-list" id="kitList"></div>
+    </div>
+  </section>
+
+  <section class="band" aria-label="Match-day kit photo">
+    <img src="{{FLATLAY_IMG}}" alt="Football boots, shin pads, a water bottle, a towel, a football and a stopwatch laid out on cream linen" loading="lazy" onerror="this.style.display='none'">
+    <div class="cap"><b>Pack like a regular.</b><br>Boots, shin pads, water, towel, ball, stopwatch &mdash; the whole kit, every single game.</div>
+  </section>
+
+  <section class="sec" id="guides" aria-label="Guides">
+    <div class="eyebrow">Good to know</div>
+    <h2>Play smart, not sorry.</h2>
+    <p class="sub">Six short guides &mdash; the stuff regulars learn the hard way, written down so you don&rsquo;t have to.</p>
+    <div class="guides" id="guideGrid"></div>
+  </section>
