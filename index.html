@@ -274,3 +274,30 @@ footer .btns{display:flex;gap:8px;flex-wrap:wrap}
       </div>
     </div>
   </section>
+  <section class="sec" id="turfs" aria-label="Find a turf">
+    <div class="eyebrow">Find a turf</div>
+    <h2>Where are we playing?</h2>
+    <p class="sub">Eight turfs across the city, with the hourly rates they were listed at in October 2026. Rates change &mdash; always confirm on the phone before you book. Tap &ldquo;Plan a game here&rdquo; to drop a turf straight into the planner.</p>
+    <div class="filters" role="group" aria-label="Filter turfs">
+      <span class="lbl">Area</span>
+      <button class="chip" type="button" data-area="All" aria-pressed="true">All areas</button>
+      <button class="chip" type="button" data-area="Jayanagar" aria-pressed="false">Jayanagar</button>
+      <button class="chip" type="button" data-area="JP Nagar" aria-pressed="false">JP Nagar</button>
+      <button class="chip" type="button" data-area="BTM &amp; HSR" aria-pressed="false">BTM &amp; HSR</button>
+      <button class="chip" type="button" data-area="Whitefield" aria-pressed="false">Whitefield</button>
+      <button class="chip" type="button" data-area="Electronic City" aria-pressed="false">Electronic City</button>
+      <span class="lbl" style="margin-left:8px">Format</span>
+      <button class="chip" type="button" data-fmt="All" aria-pressed="true">5v5 &amp; 7v7</button>
+      <button class="chip" type="button" data-fmt="5" aria-pressed="false">5-a-side</button>
+      <button class="chip" type="button" data-fmt="7" aria-pressed="false">7-a-side</button>
+      <label class="lbl" style="margin-left:8px" for="sortSel">Sort</label>
+      <select id="sortSel" aria-label="Sort turfs">
+        <option value="price">Price: low to high</option>
+        <option value="area">Area A to Z</option>
+        <option value="rateDesc">Price: high to low</option>
+      </select>
+    </div>
+    <p class="helper" id="turfCount" aria-live="polite"></p>
+    <div class="turf-grid" id="turfGrid"></div>
+    <p class="helper" style="margin-top:12px">Rates are indicative, from public listings (October 2026). Evening and weekend slots usually cost more than mornings. TurfKit does not take bookings &mdash; call the turf to lock your slot.</p>
+  </section>
