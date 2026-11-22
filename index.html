@@ -1005,3 +1005,66 @@ function hideCoach(){ $('#coach').classList.remove('show'); }
 $('#coachNext').addEventListener('click', function(){ if (coachStep < 2) showCoach(coachStep + 1); else hideCoach(); });
 $('#coachSkip').addEventListener('click', hideCoach);
 $('#coach').addEventListener('click', function(e){ if (e.target === $('#coach')) hideCoach(); });
+/* ---- intro ---- */
+var INTRO_MS = 4200;
+function endIntro(){
+  var intro = $('#intro');
+  if (!intro || intro.classList.contains('done')) return;
+  intro.classList.add('done');
+  state.seen = true; save();
+  if (!state._coachShown) { state._coachShown = true; save(); setTimeout(function(){ showCoach(0); }, 500); }
+}
+var introStart = Date.now();
+var introTimer = setInterval(function(){
+  var el = $('#introBar');
+  if (!el) { clearInterval(introTimer); return; }
+  var p = Math.min(100, Math.round((Date.now() - introStart) / INTRO_MS * 100));
+  el.style.width = p + '%';
+  $('#introPct').textContent = p < 100 ? 'Getting the floodlights on… ' + p + '%' : 'Kick-off!';
+  if (p >= 100) { clearInterval(introTimer); setTimeout(endIntro, 350); }
+}, 120);
+$('#skipIntro').addEventListener('click', function(){ clearInterval(introTimer); endIntro(); });
+$('#intro').addEventListener('click', function(e){ if (e.target === $('#intro')) { clearInterval(introTimer); endIntro(); } });
+if (state.seen) {
+  INTRO_MS = 900;
+}
+
+/* ---- countdown to kick-off ---- */
+function tick(){
+  var g = state.nextGame;
+  var target = new Date(g.date + 'T' + String(g.hour).padStart(2,'0') + ':00:00');
+  var diff = target.getTime() - Date.now();
+  if (diff < 0) { $('#cdH').textContent = '00'; $('#cdM').textContent = '00'; $('#cdS').textContent = '00'; return; }
+  var h = Math.floor(diff / 3600000);
+  var m = Math.floor(diff % 3600000 / 60000);
+  var s = Math.floor(diff % 60000 / 1000);
+  $('#cdH').textContent = String(h).padStart(2,'0');
+  $('#cdM').textContent = String(m).padStart(2,'0');
+  $('#cdS').textContent = String(s).padStart(2,'0');
+}
+
+/* ---- boot ---- */
+function renderAll(){
+  renderTurfs();
+  renderPlanTurf();
+  $('#planDate').value = state.nextGame.date;
+  renderSlots();
+  $$('#plan [data-hours]').forEach(function(x){ x.setAttribute('aria-pressed', String(parseInt(x.getAttribute('data-hours'), 10) === state.nextGame.hours)); });
+  updateBill();
+  renderSpots();
+  updateSquadHint();
+  renderSquad();
+  $('#extraCost').value = String(state.extra || 0);
+  renderSplit();
+  renderTally();
+  renderMatches();
+  renderLogForm();
+  renderKit();
+  renderGuides();
+  tick();
+}
+renderAll();
+setInterval(tick, 1000);
+TurfKit.renderAll = renderAll;
+TurfKit.tick = tick;
+TurfKit.endIntro = endIntro;
