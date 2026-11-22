@@ -353,3 +353,48 @@ footer .btns{display:flex;gap:8px;flex-wrap:wrap}
       </div>
     </div>
   </section>
+  <section class="sec" id="formation" aria-label="Formation and squad">
+    <div class="eyebrow">Formation &amp; squad</div>
+    <h2>Set the team before you arrive.</h2>
+    <p class="sub">Tap a spot on the pitch, then tap a player to put them there. No more standing around at kick-off deciding who plays where.</p>
+    <div class="pitch-wrap">
+      <div>
+        <div class="pitch" id="pitch" role="group" aria-label="Football pitch formation">
+          <svg viewBox="0 0 300 410" preserveAspectRatio="none" aria-hidden="true">
+            <rect x="0" y="0" width="300" height="410" fill="none"/>
+            <rect x="8" y="8" width="284" height="394" fill="none" stroke="rgba(250,243,231,.85)" stroke-width="2"/>
+            <line x1="150" y1="8" x2="150" y2="402" stroke="rgba(250,243,231,.85)" stroke-width="2"/>
+            <circle cx="150" cy="205" r="52" fill="none" stroke="rgba(250,243,231,.85)" stroke-width="2"/>
+            <circle cx="150" cy="205" r="3" fill="rgba(250,243,231,.85)"/>
+            <rect x="95" y="8" width="110" height="48" fill="none" stroke="rgba(250,243,231,.85)" stroke-width="2"/>
+            <rect x="120" y="8" width="60" height="20" fill="none" stroke="rgba(250,243,231,.85)" stroke-width="2"/>
+            <rect x="95" y="354" width="110" height="48" fill="none" stroke="rgba(250,243,231,.85)" stroke-width="2"/>
+            <rect x="120" y="382" width="60" height="20" fill="none" stroke="rgba(250,243,231,.85)" stroke-width="2"/>
+            <path d="M 8 60 A 40 40 0 0 0 48 8" fill="none" stroke="rgba(250,243,231,.85)" stroke-width="2"/>
+            <path d="M 292 60 A 40 40 0 0 1 252 8" fill="none" stroke="rgba(250,243,231,.85)" stroke-width="2"/>
+            <path d="M 8 350 A 40 40 0 0 1 48 402" fill="none" stroke="rgba(250,243,231,.85)" stroke-width="2"/>
+            <path d="M 292 350 A 40 40 0 0 0 252 402" fill="none" stroke="rgba(250,243,231,.85)" stroke-width="2"/>
+          </svg>
+          <div id="spots"></div>
+        </div>
+        <div class="filters" style="margin-top:12px" role="group" aria-label="Formation">
+          <span class="lbl">Formation</span>
+          <button class="chip" type="button" data-fm="5" aria-pressed="true">5-a-side &middot; 1-2-1</button>
+          <button class="chip" type="button" data-fm="7" aria-pressed="false">7-a-side &middot; 1-3-2</button>
+          <button class="btn ghost small" type="button" id="clearSpots">Clear spots</button>
+        </div>
+      </div>
+      <div class="card squad">
+        <div class="eyebrow">Squad</div>
+        <h3 class="serif" style="font-size:22px;margin:4px 0 6px">Who&rsquo;s playing?</h3>
+        <p class="helper" id="squadHint">Tap a pitch spot, then tap a player below to place them.</p>
+        <div id="squadList"></div>
+        <div class="add">
+          <input type="text" id="newPlayer" placeholder="Add a player — e.g. Arjun" maxlength="20" aria-label="Add a player">
+          <button class="btn small" type="button" id="addPlayer">Add</button>
+        </div>
+        <p class="helper" style="margin:12px 0 0">Subs sit on the bench list below the pitch. Tap a benched player to swap them in.</p>
+        <div id="benchList" style="margin-top:10px"></div>
+      </div>
+    </div>
+  </section>
