@@ -925,3 +925,83 @@ function renderLogForm(){
   $('#logTurf').value = state.nextGame.turfId;
   $('#logMvp').innerHTML = state.squad.map(function(p){ return '<option value="' + esc(p.name) + '">' + esc(p.name) + '</option>'; }).join('');
 }
+/* ---- kit checklist ---- */
+function renderKit(){
+  $('#kitList').innerHTML = KIT.map(function(k, i){
+    return '<label><input type="checkbox" data-kit="' + i + '"' + (state.kit[i] ? ' checked' : '') + '><span><b>' + esc(k.t) + '</b><small>' + esc(k.d) + '</small></span></label>';
+  }).join('');
+  var done = state.kit.filter(Boolean).length;
+  var pct = Math.round(done / KIT.length * 100);
+  $('#kitPct').textContent = pct + '%';
+  $('#kitLine').textContent = done + ' of ' + KIT.length + ' packed';
+  $('#kitRing').style.strokeDashoffset = String(389.6 * (1 - done / KIT.length));
+}
+$('#kitList').addEventListener('change', function(e){
+  var cb = e.target.closest('[data-kit]');
+  if (!cb) return;
+  state.kit[parseInt(cb.getAttribute('data-kit'), 10)] = cb.checked;
+  save(); renderKit();
+});
+$('#resetKit').addEventListener('click', function(){
+  state.kit = KIT.map(function(){ return false; });
+  save(); renderKit();
+  toast('Kit checklist reset');
+});
+
+/* ---- guides ---- */
+function renderGuides(){
+  $('#guideGrid').innerHTML = GUIDES.map(function(g){
+    return '<details class="card guide"><summary>' + esc(g.t) + '</summary><p>' + esc(g.b) + '</p><ul>' +
+      g.ul.map(function(u){ return '<li>' + esc(u) + '</li>'; }).join('') + '</ul></details>';
+  }).join('');
+}
+
+/* ---- footer actions ---- */
+$('#copyAll').addEventListener('click', function(){
+  var t = turfById(state.nextGame.turfId);
+  var g = state.nextGame;
+  var b = billFor(t, g.date, g.hour, g.hours, g.players);
+  var onPitch = Object.keys(state.spots).sort().map(function(k){ return FORMATIONS[state.formation][k].pos + ': ' + state.spots[k]; }).join(', ') || 'formation not set yet';
+  var done = state.kit.filter(Boolean).length;
+  var txt = 'TurfKit — next game: ' + t.name + ' (' + t.area + '), ' + fmtDate(g.date) + ' ' + fmtTime(g.hour) + ', ' + g.hours + 'h, ' + g.players + ' players. Total ' + inr(b.total) + ', ' + inr(b.per) + ' per head. Formation: ' + onPitch + '. Kit: ' + done + '/' + KIT.length + ' packed.';
+  copyText(txt, 'Plan copied');
+});
+$('#removeSamples').addEventListener('click', function(){
+  if (!state.samples) { toast('Samples already removed'); return; }
+  state.samples = false;
+  state.matches = [];
+  state.squad = [{name:'You', pos:'MID', on:true}];
+  state.spots = {};
+  state.paid = {'You':0};
+  state.kit = KIT.map(function(){ return false; });
+  save(); renderAll();
+  toast('Samples removed — a clean slate');
+});
+$('#eraseAll').addEventListener('click', function(){
+  if (!confirm('Erase everything in TurfKit — squad, matches, kit list and saved games?')) return;
+  try { localStorage.removeItem(KEY); } catch(e){}
+  state = seed();
+  save(); renderAll();
+  toast('Everything erased — fresh start');
+});
+
+/* ---- coach tour ---- */
+var COACH = [
+  {t:'Find your turf', x:'Eight turfs across Bengaluru with real listed hourly rates. Filter by area and format, then tap “Plan a game here” to send a turf to the planner.'},
+  {t:'Plan it and split it', x:'Pick the date, start time and hours — the bill shows the total and the per-head share instantly. The Split tab then tracks who actually paid.'},
+  {t:'Set the formation, log the game', x:'Tap a spot on the pitch, tap a player to place them. After the whistle, log the score in the Match log and your season record builds up.'}
+];
+var coachStep = 0;
+function showCoach(step){
+  coachStep = step;
+  $('#coachStep').textContent = (step + 1) + ' of 3';
+  $('#coachTitle').textContent = COACH[step].t;
+  $('#coachText').textContent = COACH[step].x;
+  $$('#coach .dots i').forEach(function(d, i){ d.classList.toggle('on', i === step); });
+  $('#coachNext').textContent = step === 2 ? 'Start playing' : 'Next';
+  $('#coach').classList.add('show');
+}
+function hideCoach(){ $('#coach').classList.remove('show'); }
+$('#coachNext').addEventListener('click', function(){ if (coachStep < 2) showCoach(coachStep + 1); else hideCoach(); });
+$('#coachSkip').addEventListener('click', hideCoach);
+$('#coach').addEventListener('click', function(e){ if (e.target === $('#coach')) hideCoach(); });
